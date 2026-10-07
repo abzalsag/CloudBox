@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cloudbox-postgres
+    environment:
+      POSTGRES_USER: cloudbox
+      POSTGRES_PASSWORD: cloudbox
+      POSTGRES_DB: cloudbox
+    ports:
+      - "5434:5432"
+    volumes:
+      - cloudbox_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  cloudbox_postgres_data:
