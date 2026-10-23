@@ -1,13 +1,13 @@
-DB_URL ?= postgres://cloudbox:cloudbox@localhost:5432/cloudbox?sslmode=disable
+DB_URL ?= postgres://cloudbox:cloudbox@localhost:5434/cloudbox?sslmode=disable
 
 migrate-up:
-	migrate -path db/migrations -database "$(DB_URL)" up
+	migrate -path database/migrations -database "$(DB_URL)" up
 
 migrate-down:
-	migrate -path db/migrations -database "$(DB_URL)" down 1
+	migrate -path database/migrations -database "$(DB_URL)" down 1
 
 migrate-new:
-	migrate create -ext sql -dir db/migrations -seq $(name)
+	migrate create -ext sql -dir database/migrations -seq $(name)
 
 sqlc:
 	sqlc generate
