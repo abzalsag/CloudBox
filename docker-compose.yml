@@ -1,7 +1,6 @@
 services:
   postgres:
-    image: postgres:16
-    container_name: cloudbox-postgres
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: cloudbox
       POSTGRES_PASSWORD: cloudbox
@@ -9,7 +8,17 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - cloudbox_postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -s3 -s3.port=8333
+    ports:
+      - "8333:8333"   # S3 API
+      - "9333:9333"   # master (UI)
+    volumes:
+      - seaweeddata:/data
 
 volumes:
-  cloudbox_postgres_data:
+  pgdata:
+  seaweeddata:

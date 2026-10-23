@@ -30,14 +30,15 @@ UPDATE folders SET parent_id = sqlc.narg('parent_id'), updated_at = now()
 WHERE id = $1 AND owner_id = $2 AND deleted_at IS NULL
     RETURNING *;
 
--- name: IsFolderDescendant :one
-
+--- name: IsFolderDescendant :one
 WITH RECURSIVE tree AS (
     SELECT f.id, f.parent_id FROM folders f WHERE f.id = sqlc.arg('candidate_id')
     UNION ALL
     SELECT f.id, f.parent_id FROM folders f JOIN tree t ON f.id = t.parent_id
 )
-SELECT EXISTS (SELECT 1 FROM tree WHERE id = sqlc.arg('ancestor_id'))::boolean AS is_descendant;
+SELECT EXISTS (
+    SELECT 1 FROM tree WHERE tree.id = sqlc.arg('ancestor_id')
+)::boolean AS is_descendant;
 
 -- name: GetFolderBreadcrumbs :many
 

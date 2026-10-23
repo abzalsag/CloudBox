@@ -61,7 +61,6 @@ UPDATE files SET deleted_at = NULL, updated_at = now()
 WHERE owner_id = $1 AND folder_id = ANY(sqlc.arg('folder_ids')::uuid[]);
 
 -- name: ListTrashedFiles :many
--- Папкасы өшірілмеген, өзі өшірілген файлдар
 SELECT f.* FROM files f
 WHERE f.owner_id = $1 AND f.deleted_at IS NOT NULL
   AND (f.folder_id IS NULL
