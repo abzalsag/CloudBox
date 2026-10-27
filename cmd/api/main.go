@@ -2,68 +2,50 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
-	"os"
-	"time"
 
-	db "CloudBox/db/sqlc"
-	"CloudBox/internal/database"
-	"CloudBox/internal/user"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"CloudBox/internal/config"
+	"CloudBox/internal/entity"
+	"CloudBox/internal/repository/postgres"
+	"CloudBox/pkg/logger"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Println(".env file not found")
-	}
-
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
-		log.Fatal("DATABASE_URL is not set")
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	pool, err := database.NewPostgres(ctx, databaseURL)
+	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	l, err := logger.New(cfg.Env)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer l.Sync()
+
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		l.Fatal("db connect", zap.Error(err))
 	}
 	defer pool.Close()
 
 	if err := pool.Ping(ctx); err != nil {
-		log.Fatal("database connection failed:", err)
+		l.Fatal("db ping", zap.Error(err))
 	}
+	l.Info("database connected")
 
-	queries := db.New(pool)
+	store := postgres.NewStore(pool)
+	userRepo := postgres.NewUserRepo(store)
 
-	userRepository := user.NewRepository(queries)
-	userService := user.NewService(userRepository)
-	userHandler := user.NewHandler(userService)
-
-	router := gin.Default()
-
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"app":    "cloudbox",
-			"status": "ok",
-		})
-	})
-
-	api := router.Group("/api/v1")
-
-	auth := api.Group("/auth")
-	{
-		auth.POST("/register", userHandler.Register)
-	}
-
-	log.Println("database connected successfully")
-	log.Println("sqlc initialized successfully")
-	log.Println("server running on :8080")
-
-	if err := router.Run(":8080"); err != nil {
-		log.Fatal(err)
+	_, err = userRepo.GetByEmail(ctx, "nobody@example.com")
+	if errors.Is(err, entity.ErrNotFound) {
+		l.Info("user repo check ok: ErrNotFound returned as expected")
+	} else {
+		l.Fatal("user repo check failed", zap.Error(err))
 	}
 }
