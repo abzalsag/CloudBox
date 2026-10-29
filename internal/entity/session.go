@@ -13,5 +13,6 @@ type RefreshToken struct {
 	UserAgent string
 	IP        string
 	ExpiresAt time.Time
+	RevokedAt *time.Time
 	CreatedAt time.Time
 }
