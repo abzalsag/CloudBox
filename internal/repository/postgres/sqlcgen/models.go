@@ -109,7 +109,7 @@ type File struct {
 	Bucket     string        `json:"bucket"`
 	CreatedAt  time.Time     `json:"created_at"`
 	UpdatedAt  time.Time     `json:"updated_at"`
-	DeletedAt  **time.Time   `json:"deleted_at"`
+	DeletedAt  *time.Time    `json:"deleted_at"`
 }
 
 type FileVersion struct {
@@ -130,7 +130,7 @@ type Folder struct {
 	Name      string        `json:"name"`
 	CreatedAt time.Time     `json:"created_at"`
 	UpdatedAt time.Time     `json:"updated_at"`
-	DeletedAt **time.Time   `json:"deleted_at"`
+	DeletedAt *time.Time    `json:"deleted_at"`
 }
 
 type RefreshToken struct {
@@ -140,7 +140,7 @@ type RefreshToken struct {
 	UserAgent string      `json:"user_agent"`
 	Ip        *netip.Addr `json:"ip"`
 	ExpiresAt time.Time   `json:"expires_at"`
-	RevokedAt **time.Time `json:"revoked_at"`
+	RevokedAt *time.Time  `json:"revoked_at"`
 	CreatedAt time.Time   `json:"created_at"`
 }
 
