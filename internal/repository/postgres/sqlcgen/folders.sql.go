@@ -70,7 +70,6 @@ func (q *Queries) GetFolder(ctx context.Context, arg GetFolderParams) (Folder, e
 }
 
 const getFolderBreadcrumbs = `-- name: GetFolderBreadcrumbs :many
-
 WITH RECURSIVE path AS (
     SELECT id, parent_id, name, 1 AS depth
     FROM folders WHERE folders.id = $1 AND folders.owner_id = $2
@@ -151,7 +150,6 @@ func (q *Queries) HardDeleteFolders(ctx context.Context, arg HardDeleteFoldersPa
 }
 
 const listExpiredTrashedFolderIDs = `-- name: ListExpiredTrashedFolderIDs :many
-
 SELECT id, owner_id FROM folders
 WHERE deleted_at IS NOT NULL AND deleted_at < now() - interval '30 days'
     LIMIT $1
@@ -183,7 +181,6 @@ func (q *Queries) ListExpiredTrashedFolderIDs(ctx context.Context, limit int32) 
 }
 
 const listFolderTreeIDs = `-- name: ListFolderTreeIDs :many
-
 WITH RECURSIVE tree AS (
     SELECT id FROM folders WHERE folders.id = $1 AND folders.owner_id = $2
     UNION ALL
@@ -218,7 +215,6 @@ func (q *Queries) ListFolderTreeIDs(ctx context.Context, arg ListFolderTreeIDsPa
 }
 
 const listFoldersByParent = `-- name: ListFoldersByParent :many
-
 SELECT id, owner_id, parent_id, name, created_at, updated_at, deleted_at FROM folders
 WHERE owner_id = $1
   AND parent_id IS NOT DISTINCT FROM $2
@@ -268,7 +264,6 @@ func (q *Queries) ListFoldersByParent(ctx context.Context, arg ListFoldersByPare
 }
 
 const listTrashedRootFolders = `-- name: ListTrashedRootFolders :many
-
 SELECT f.id, f.owner_id, f.parent_id, f.name, f.created_at, f.updated_at, f.deleted_at FROM folders f
 WHERE f.owner_id = $1 AND f.deleted_at IS NOT NULL
   AND (f.parent_id IS NULL
@@ -305,7 +300,6 @@ func (q *Queries) ListTrashedRootFolders(ctx context.Context, ownerID uuid.UUID)
 }
 
 const moveFolder = `-- name: MoveFolder :one
-
 UPDATE folders SET parent_id = $3, updated_at = now()
 WHERE id = $1 AND owner_id = $2 AND deleted_at IS NULL
     RETURNING id, owner_id, parent_id, name, created_at, updated_at, deleted_at

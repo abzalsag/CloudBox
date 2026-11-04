@@ -95,11 +95,20 @@ func (r *FolderRepo) Move(ctx context.Context, ownerID, id uuid.UUID, parentID *
 	return toFolder(row), nil
 }
 
-func (r *FolderRepo) IsDescendant(ctx context.Context, candidateID, ancestorID uuid.UUID) (bool, error) {
-	return r.Q(ctx).IsFolderDescendant(ctx, sqlcgen.IsFolderDescendantParams{
-		CandidateID: candidateID,
-		AncestorID:  ancestorID,
+func (r *FolderRepo) IsDescendant(ctx context.Context, ownerID, candidateID, ancestorID uuid.UUID) (bool, error) {
+	path, err := r.Q(ctx).GetFolderBreadcrumbs(ctx, sqlcgen.GetFolderBreadcrumbsParams{
+		ID:      candidateID,
+		OwnerID: ownerID,
 	})
+	if err != nil {
+		return false, err
+	}
+	for _, p := range path {
+		if p.ID == ancestorID {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (r *FolderRepo) SoftDeleteTree(ctx context.Context, ownerID, id uuid.UUID) error {
