@@ -11,8 +11,9 @@ type File struct {
 	OwnerID    uuid.UUID
 	FolderID   *uuid.UUID
 	Name       string
+	Size       int64
 	MimeType   string
-	CheckSum   string
+	Checksum   string
 	StorageKey string
 	Bucket     string
 	CreatedAt  time.Time
