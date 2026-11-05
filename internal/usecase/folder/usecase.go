@@ -76,7 +76,7 @@ func (u *Usecase) Move(ctx context.Context, ownerID, id uuid.UUID, newParentID *
 		if _, err := u.repo.GetByID(ctx, ownerID, *newParentID); err != nil {
 			return nil, err
 		}
-		isDescendant, err := u.repo.IsDescendant(ctx, *newParentID, id)
+		isDescendant, err := u.repo.IsDescendant(ctx, ownerID, *newParentID, id)
 		if err != nil {
 			return nil, err
 		}
