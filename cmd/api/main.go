@@ -22,6 +22,8 @@ import (
 	"CloudBox/internal/usecase/auth"
 	"CloudBox/internal/usecase/file"
 	"CloudBox/internal/usecase/folder"
+	"CloudBox/internal/usecase/trash"
+	"CloudBox/internal/worker"
 	"CloudBox/pkg/hasher"
 	"CloudBox/pkg/logger"
 	"CloudBox/pkg/token"
@@ -37,7 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer l.Sync()
+	defer func() { _ = l.Sync() }()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -69,11 +71,15 @@ func main() {
 	refreshRepo := postgres.NewRefreshTokenRepo(store)
 	folderRepo := postgres.NewFolderRepo(store)
 	fileRepo := postgres.NewFileRepo(store)
+	trashRepo := postgres.NewTrashRepo(store)
 
 	tokenMgr := token.NewManager(cfg.JWTSecret, cfg.AccessTTL)
 	authUC := auth.NewUsecase(userRepo, refreshRepo, store, hasher.Bcrypt{}, tokenMgr, cfg.AccessTTL, cfg.RefreshTTL)
 	folderUC := folder.NewUsecase(folderRepo)
 	fileUC := file.NewUsecase(fileRepo, folderRepo, userRepo, storage, store)
+	trashUC := trash.NewUsecase(trashRepo, folderRepo, userRepo, storage, store, l)
+
+	go worker.RunTrashCleaner(ctx, trashUC, l, time.Hour)
 
 	if cfg.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
@@ -83,6 +89,7 @@ func main() {
 		handler.NewAuthHandler(authUC),
 		handler.NewFolderHandler(folderUC),
 		handler.NewFileHandler(fileUC),
+		handler.NewTrashHandler(trashUC),
 		tokenMgr,
 	)
 

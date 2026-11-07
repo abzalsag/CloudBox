@@ -15,6 +15,7 @@ func NewRouter(
 	authH *handler.AuthHandler,
 	folderH *handler.FolderHandler,
 	fileH *handler.FileHandler,
+	trashH *handler.TrashHandler,
 	tp middleware.TokenParser,
 ) *gin.Engine {
 	r := gin.New()
@@ -49,6 +50,13 @@ func NewRouter(
 	files.PATCH("/:id", fileH.Rename)
 	files.PATCH("/:id/move", fileH.Move)
 	files.DELETE("/:id", fileH.Delete)
+
+	trash := protected.Group("/trash")
+	trash.GET("", trashH.List)
+	trash.POST("/files/:id/restore", trashH.RestoreFile)
+	trash.POST("/folders/:id/restore", trashH.RestoreFolder)
+	trash.DELETE("/files/:id", trashH.PurgeFile)
+	trash.DELETE("/folders/:id", trashH.PurgeFolder)
 
 	return r
 }
